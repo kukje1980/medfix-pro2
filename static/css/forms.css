@@ -1,0 +1,59 @@
+/* ===== FORM LAYOUT ===== */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-gray-700);
+  margin-bottom: 6px;
+}
+
+.form-label .required {
+  color: var(--color-danger);
+  margin-left: 2px;
+}
+
+.form-hint {
+  font-size: 12px;
+  color: var(--color-gray-400);
+  margin-top: 4px;
+}
+
+.form-error {
+  font-size: 12px;
+  color: var(--color-danger);
+  margin-top: 4px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-row.cols-3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+input.error, select.error, textarea.error {
+  border-color: var(--color-danger);
+}
+
+/* ===== SECTION DIVIDER ===== */
+.form-section {
+  margin-bottom: 20px;
+}
+
+.form-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-gray-100);
+  margin-bottom: 16px;
+}

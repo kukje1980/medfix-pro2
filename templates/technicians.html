@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}기술자 관리{% endblock %}
+{% block page_title %}기술자 관리{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>기술자 관리</h1>
+  <button class="btn btn-primary" id="btn-create">+ 기술자 등록</button>
+</div>
+
+<div class="filter-bar">
+  <select id="filter-status" style="width:160px">
+    <option value="">전체 상태</option>
+    <option>재직중</option>
+    <option>휴직</option>
+    <option>퇴직</option>
+  </select>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>이름</th>
+        <th>사번</th>
+        <th>연락처</th>
+        <th>이메일</th>
+        <th>전문 분야</th>
+        <th>상태</th>
+      </tr>
+    </thead>
+    <tbody id="technicians-tbody"></tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/technicians.js"></script>
+{% endblock %}

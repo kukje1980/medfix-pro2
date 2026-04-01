@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}MedFix Pro{% endblock %} - 의료기기 서비스 관리</title>
+  <link rel="stylesheet" href="/static/css/main.css">
+  <link rel="stylesheet" href="/static/css/components.css">
+  <link rel="stylesheet" href="/static/css/forms.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">M</div>
+      <div>
+        <div class="logo-text">MedFix Pro</div>
+        <div class="logo-sub">의료기기 서비스 관리</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">메뉴</div>
+      <a href="/" class="nav-item">
+        <span class="nav-icon">📊</span> 대시보드
+      </a>
+      <a href="/customers" class="nav-item">
+        <span class="nav-icon">🏥</span> 고객/병원 관리
+      </a>
+      <a href="/devices" class="nav-item">
+        <span class="nav-icon">🔬</span> 의료기기 관리
+      </a>
+      <a href="/technicians" class="nav-item">
+        <span class="nav-icon">👤</span> 기술자 관리
+      </a>
+      <div class="nav-section-label" style="margin-top:8px">서비스</div>
+      <a href="/service-requests" class="nav-item">
+        <span class="nav-icon">📋</span> 서비스 요청
+      </a>
+      <a href="/service-history" class="nav-item">
+        <span class="nav-icon">📁</span> 서비스 이력
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      v1.0.0 &copy; 2026 MedFix Pro
+    </div>
+  </aside>
+
+  <div class="app-shell">
+    <header class="top-bar">
+      <div class="top-bar-title">{% block page_title %}{% endblock %}</div>
+      <div class="top-bar-spacer"></div>
+      <div class="top-bar-date"></div>
+    </header>
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal-overlay" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title"></div>
+        <button class="modal-close">×</button>
+      </div>
+      <div class="modal-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideModal()">취소</button>
+        <button class="btn btn-primary" id="modal-save-btn">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Side Panel -->
+  <div id="panel-overlay" class="panel-overlay"></div>
+  <div id="side-panel" class="side-panel">
+    <div class="side-panel-header">
+      <div class="side-panel-title"></div>
+      <button class="modal-close side-panel-close">×</button>
+    </div>
+    <div class="side-panel-body"></div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <script src="/static/js/utils.js"></script>
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/components.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

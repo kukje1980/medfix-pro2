@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}서비스 요청{% endblock %}
+{% block page_title %}서비스 요청 관리{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>서비스 요청 관리</h1>
+  <button class="btn btn-primary" id="btn-create">+ 요청 접수</button>
+</div>
+
+<div class="filter-bar">
+  <select id="filter-status" style="width:140px">
+    <option value="">전체 상태</option>
+    <option>접수</option>
+    <option>배정</option>
+    <option>진행중</option>
+    <option>완료</option>
+    <option>취소</option>
+  </select>
+  <select id="filter-priority" style="width:130px">
+    <option value="">전체 우선순위</option>
+    <option>긴급</option>
+    <option>높음</option>
+    <option>보통</option>
+    <option>낮음</option>
+  </select>
+  <select id="filter-technician" style="width:150px">
+    <option value="">전체 기술자</option>
+  </select>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>요청번호</th>
+        <th>제목</th>
+        <th>기기</th>
+        <th>병원</th>
+        <th>유형</th>
+        <th>우선순위</th>
+        <th>상태</th>
+        <th>예정일</th>
+      </tr>
+    </thead>
+    <tbody id="requests-tbody"></tbody>
+  </table>
+  <div id="pagination" class="pagination">
+    <span class="pagination-info"></span>
+    <div class="pagination-controls"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/service-requests.js"></script>
+{% endblock %}

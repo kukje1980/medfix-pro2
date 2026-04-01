@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}고객/병원 관리{% endblock %}
+{% block page_title %}고객/병원 관리{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>고객/병원 관리</h1>
+  <button class="btn btn-primary" id="btn-create">+ 신규 등록</button>
+</div>
+
+<div class="filter-bar">
+  <input type="text" id="search-input" class="search-input" placeholder="🔍 병원명, 담당자, 연락처로 검색...">
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>병원명</th>
+        <th>구분</th>
+        <th>담당자</th>
+        <th>연락처</th>
+        <th>기기 수</th>
+        <th>등록일</th>
+      </tr>
+    </thead>
+    <tbody id="customers-tbody"></tbody>
+  </table>
+  <div id="pagination" class="pagination">
+    <span class="pagination-info"></span>
+    <div class="pagination-controls"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/customers.js"></script>
+{% endblock %}

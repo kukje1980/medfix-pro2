@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}서비스 이력{% endblock %}
+{% block page_title %}서비스 이력{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>서비스 이력</h1>
+</div>
+
+<div class="filter-bar">
+  <select id="filter-device" style="width:220px">
+    <option value="">전체 기기</option>
+  </select>
+  <select id="filter-technician" style="width:150px">
+    <option value="">전체 기술자</option>
+  </select>
+</div>
+
+<div class="table-wrap" style="margin-bottom:24px">
+  <table>
+    <thead>
+      <tr>
+        <th>서비스일</th>
+        <th>기기</th>
+        <th>병원</th>
+        <th>기술자</th>
+        <th>서비스 유형</th>
+        <th>작업 시간</th>
+        <th>결과</th>
+      </tr>
+    </thead>
+    <tbody id="history-tbody"></tbody>
+  </table>
+  <div id="pagination" class="pagination">
+    <span class="pagination-info"></span>
+    <div class="pagination-controls"></div>
+  </div>
+</div>
+
+<!-- Monthly Report -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">월별 보고서</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="number" id="report-year" style="width:90px" min="2020" max="2030">
+      <select id="report-month" style="width:90px">
+        <option value="1">1월</option><option value="2">2월</option><option value="3">3월</option>
+        <option value="4">4월</option><option value="5">5월</option><option value="6">6월</option>
+        <option value="7">7월</option><option value="8">8월</option><option value="9">9월</option>
+        <option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
+      </select>
+      <button class="btn btn-secondary btn-sm" id="btn-load-report">조회</button>
+    </div>
+  </div>
+  <div class="card-body">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:20px">
+      <div class="kpi-card blue" style="box-shadow:none;border:1px solid var(--color-gray-200)">
+        <div class="kpi-label">총 서비스 건수</div>
+        <div class="kpi-value" id="report-total">-</div>
+      </div>
+      <div class="kpi-card green" style="box-shadow:none;border:1px solid var(--color-gray-200)">
+        <div class="kpi-label">총 작업 시간</div>
+        <div class="kpi-value" id="report-hours">-</div>
+        <div class="kpi-sub">시간</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div>
+        <div class="form-section-title">기술자별 실적</div>
+        <table id="report-by-tech">
+          <thead><tr><th>기술자</th><th>건수</th><th>시간</th></tr></thead>
+          <tbody><tr><td colspan="3" style="text-align:center;color:var(--color-gray-400)">조회 버튼을 누르세요</td></tr></tbody>
+        </table>
+      </div>
+      <div>
+        <div class="form-section-title">서비스 유형별 분포</div>
+        <table id="report-by-type">
+          <thead><tr><th>유형</th><th>건수</th></tr></thead>
+          <tbody><tr><td colspan="2" style="text-align:center;color:var(--color-gray-400)">조회 버튼을 누르세요</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/service-history.js"></script>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}의료기기 관리{% endblock %}
+{% block page_title %}의료기기 관리{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>의료기기 관리</h1>
+  <button class="btn btn-primary" id="btn-create">+ 기기 등록</button>
+</div>
+
+<div class="filter-bar">
+  <input type="text" id="search-input" class="search-input" placeholder="🔍 모델명, 시리얼, 제조사로 검색...">
+  <select id="filter-status" style="width:140px">
+    <option value="">전체 상태</option>
+    <option>정상</option>
+    <option>점검중</option>
+    <option>수리중</option>
+    <option>폐기</option>
+  </select>
+  <select id="filter-customer" style="width:160px">
+    <option value="">전체 병원</option>
+  </select>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>모델명</th>
+        <th>시리얼 번호</th>
+        <th>기기 분류</th>
+        <th>병원</th>
+        <th>설치 위치</th>
+        <th>상태</th>
+        <th>마지막 서비스</th>
+      </tr>
+    </thead>
+    <tbody id="devices-tbody"></tbody>
+  </table>
+  <div id="pagination" class="pagination">
+    <span class="pagination-info"></span>
+    <div class="pagination-controls"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/devices.js"></script>
+{% endblock %}
