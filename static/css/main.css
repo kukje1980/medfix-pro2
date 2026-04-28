@@ -1,23 +1,23 @@
 :root {
-  --color-primary: #2563eb;
-  --color-primary-dark: #1d4ed8;
-  --color-primary-light: #eff6ff;
+  --color-primary: #d97706;
+  --color-primary-dark: #b45309;
+  --color-primary-light: #fefce8;
   --color-success: #16a34a;
   --color-success-light: #f0fdf4;
   --color-warning: #d97706;
   --color-warning-light: #fffbeb;
   --color-danger: #dc2626;
   --color-danger-light: #fef2f2;
-  --color-gray-50: #f8fafc;
-  --color-gray-100: #f1f5f9;
-  --color-gray-200: #e2e8f0;
-  --color-gray-300: #cbd5e1;
+  --color-gray-50: #fffde7;
+  --color-gray-100: #fef9c3;
+  --color-gray-200: #fde68a;
+  --color-gray-300: #fcd34d;
   --color-gray-400: #94a3b8;
   --color-gray-500: #64748b;
   --color-gray-600: #475569;
   --color-gray-700: #334155;
   --color-gray-800: #1e293b;
-  --color-gray-900: #0f172a;
+  --color-gray-900: #1e1a00;
   --sidebar-width: 240px;
   --header-height: 60px;
   --border-radius: 8px;
@@ -33,7 +33,7 @@ html { font-size: 14px; }
 
 body {
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: var(--color-gray-50);
+  background: #fffde7;
   color: var(--color-gray-800);
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
@@ -43,7 +43,7 @@ body {
 
 /* ===== SIDEBAR ===== */
 .sidebar {
-  background: var(--color-gray-900);
+  background: #78350f;
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -67,7 +67,8 @@ body {
 .sidebar-logo .logo-icon {
   width: 36px;
   height: 36px;
-  background: var(--color-primary);
+  background: #fbbf24;
+  color: #78350f;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -122,7 +123,7 @@ body {
 
 .nav-item.active {
   color: #fff;
-  background: rgba(37, 99, 235, 0.25);
+  background: rgba(251, 191, 36, 0.25);
 }
 
 .nav-item.active::before {
@@ -156,8 +157,8 @@ body {
 /* ===== TOP BAR ===== */
 .top-bar {
   height: var(--header-height);
-  background: #fff;
-  border-bottom: 1px solid var(--color-gray-200);
+  background: #fef9c3;
+  border-bottom: 2px solid #fde68a;
   display: flex;
   align-items: center;
   padding: 0 24px;
@@ -372,8 +373,8 @@ tbody tr { cursor: pointer; transition: background 0.1s; }
   white-space: nowrap;
 }
 
-.btn-primary { background: var(--color-primary); color: #fff; }
-.btn-primary:hover { background: var(--color-primary-dark); }
+.btn-primary { background: #d97706; color: #fff; }
+.btn-primary:hover { background: #b45309; }
 .btn-secondary { background: var(--color-gray-100); color: var(--color-gray-700); border: 1px solid var(--color-gray-200); }
 .btn-secondary:hover { background: var(--color-gray-200); }
 .btn-success { background: var(--color-success); color: #fff; }
