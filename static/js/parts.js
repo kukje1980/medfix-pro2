@@ -205,74 +205,79 @@ async function showPartDetail(part) {
 }
 
 function renderDetailPanel(part, deals) {
-  const html = `
-    <div class="part-detail-section">
-      <div style="display:flex;gap:8px;margin-bottom:12px">
+  const fw = v => v == null ? '<span style="color:var(--color-gray-400)">-</span>' : Number(v).toLocaleString('ko-KR') + '원';
+
+  let h = `<div class="pip">
+    <div class="pip-header">
+      <div>
+        <h3><code style="font-size:12px;background:var(--color-gray-100);padding:2px 6px;border-radius:4px;font-weight:600">${escHtml(part.part_code)}</code> &nbsp;${escHtml(part.part_name)}</h3>
+        <div class="pip-sub">${escHtml(part.company)} › ${escHtml(part.category)} › ${escHtml(part.model)}</div>
+      </div>
+      <div class="pip-actions">
         <button class="btn btn-secondary btn-sm" onclick="openEditPart(${part.id})">✏️ 수정</button>
-        <button class="btn btn-danger btn-sm" onclick="deletePart(${part.id}, '${escHtml(part.part_name)}')">🗑 삭제</button>
+        <button class="btn btn-danger btn-sm" onclick="deletePart(${part.id}, '${escHtml(part.part_name).replace(/'/g, "\\'")}')">🗑 삭제</button>
+        <button class="btn btn-sm" onclick="document.getElementById('part-detail-inline').style.display='none'" style="padding:4px 10px;font-size:14px;line-height:1">×</button>
       </div>
-      <div class="detail-grid" style="margin-bottom:16px">
-        <div class="detail-field"><label>부품코드</label><div class="value"><code>${escHtml(part.part_code)}</code></div></div>
-        <div class="detail-field"><label>부품명</label><div class="value">${escHtml(part.part_name)}</div></div>
-        <div class="detail-field"><label>제조사</label><div class="value">${escHtml(part.company)}</div></div>
-        <div class="detail-field"><label>분류</label><div class="value">${escHtml(part.category)}</div></div>
-        <div class="detail-field full"><label>모델</label><div class="value">${escHtml(part.model)}</div></div>
-      </div>
-    </div>
+    </div>`;
 
-    ${part.symptom ? `
-    <div class="part-detail-section">
-      <h4>⚠ 증상 / 조치</h4>
-      <div class="symptom-box">
-        <div>${escHtml(part.symptom)}</div>
-        ${part.symptom_detail ? `<div style="margin-top:6px;font-size:12px;color:#a16207">${escHtml(part.symptom_detail)}</div>` : ''}
-        ${part.symptom_location ? `<div style="margin-top:4px;font-size:11px;color:#b45309">📍 ${escHtml(part.symptom_location)}</div>` : ''}
-      </div>
-    </div>` : ''}
+  if (part.symptom) {
+    h += `<div class="pip-symptom">
+      <strong>⚠ ${escHtml(part.symptom)}</strong>
+      ${part.symptom_detail ? `<div style="margin-top:4px">${escHtml(part.symptom_detail)}</div>` : ''}
+      ${part.symptom_location ? `<div style="margin-top:3px;font-size:11px">📍 ${escHtml(part.symptom_location)}</div>` : ''}
+    </div>`;
+  }
 
-    <div class="part-detail-section">
-      <h4>💰 가격 정보</h4>
-      <div class="price-cards">
-        <div class="price-card"><div class="pc-label">원가</div><div class="pc-value">${fmtPrice(part.cost_avg)}</div></div>
-        <div class="price-card"><div class="pc-label">로컬가</div><div class="pc-value">${fmtPrice(part.local_price)}</div></div>
-        <div class="price-card"><div class="pc-label">대학가</div><div class="pc-value">${fmtPrice(part.univ_price)}</div></div>
-      </div>
-      ${part.deal_count > 0 ? `
-      <div class="price-cards">
-        <div class="price-card primary"><div class="pc-label">평균 납품가</div><div class="pc-value">${fmtPrice(part.avg_price)}</div></div>
-        <div class="price-card"><div class="pc-label">최저 납품가</div><div class="pc-value">${fmtPrice(part.min_price)}</div></div>
-        <div class="price-card"><div class="pc-label">최고 납품가</div><div class="pc-value">${fmtPrice(part.max_price)}</div></div>
-      </div>` : ''}
-    </div>
+  h += `<div class="pip-prices">
+    <div class="pip-card"><label>원가</label><div class="pv">${fw(part.cost_avg)}</div></div>
+    <div class="pip-card"><label>로컬가</label><div class="pv blue">${fw(part.local_price)}</div></div>
+    <div class="pip-card"><label>대학가</label><div class="pv blue">${fw(part.univ_price)}</div></div>
+    <div class="pip-card"><label>평균단가</label><div class="pv amber">${fw(part.avg_price)}</div></div>
+    <div class="pip-card"><label>최저납품가</label><div class="pv">${fw(part.min_price)}</div></div>
+    <div class="pip-card"><label>최고납품가</label><div class="pv">${fw(part.max_price)}</div></div>
+  </div>`;
 
-    <div class="part-detail-section">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <h4 style="margin-bottom:0">📋 납품 내역 (${deals.length}건)</h4>
+  h += `<div class="pip-deals">
+    <div class="pip-deals-header">
+      <h4>📋 납품 내역 (${deals.length}건)</h4>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="text" id="deal-hospital-filter" class="search-input" style="width:180px" placeholder="🔍 병원명 검색..." oninput="filterDeals(${part.id})">
         <button class="btn btn-secondary btn-sm" onclick="openAddDeal(${part.id})">+ 납품 등록</button>
       </div>
-      <div class="deal-filter-row">
-        <input type="text" id="deal-hospital-filter" placeholder="🔍 병원명 검색..." oninput="filterDeals(${part.id})">
-      </div>
-      <div id="deals-table-wrap">
-        ${renderDealsTable(deals)}
-      </div>
     </div>
-  `;
-  showSidePanel(`${part.part_name} (${part.part_code})`, html);
+    <div id="deals-table-wrap">${renderDealsTable(deals)}</div>
+  </div>`;
+
+  h += `</div>`;
+
+  const panel = document.getElementById('part-detail-inline');
+  panel.style.display = 'block';
+  panel.innerHTML = h;
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function renderDealsTable(deals) {
   if (!deals || deals.length === 0) {
     return `<div style="text-align:center;padding:20px;color:var(--color-gray-400);font-size:12px">납품 내역이 없습니다.</div>`;
   }
-  return `<table style="font-size:12px">
-    <thead><tr><th>납품일</th><th>병원</th><th style="text-align:right">수량</th><th style="text-align:right">납품가</th><th></th></tr></thead>
+  return `<table class="pip-dt">
+    <thead>
+      <tr>
+        <th>병원/거래처</th>
+        <th>납품일</th>
+        <th class="r">수량</th>
+        <th class="r">납품단가</th>
+        <th class="r">실원가</th>
+        <th></th>
+      </tr>
+    </thead>
     <tbody>${deals.map(d => `
       <tr>
-        <td>${formatDateShort(d.deal_date)}</td>
         <td>${escHtml(d.hospital || '-')}</td>
-        <td style="text-align:right">${d.quantity || 1}</td>
-        <td style="text-align:right;font-weight:600;color:var(--color-primary)">${fmtPrice(d.deal_price)}</td>
+        <td>${formatDateShort(d.deal_date)}</td>
+        <td class="r">${d.quantity || 1}</td>
+        <td class="r" style="font-weight:600;color:var(--color-primary)">${fmtPrice(d.deal_price)}</td>
+        <td class="r">${fmtPrice(d.cost_price)}</td>
         <td><button class="btn btn-sm btn-danger" style="padding:2px 7px;font-size:11px" onclick="deleteDeal(${d.id}, ${d.part_id})">삭제</button></td>
       </tr>`).join('')}
     </tbody>
@@ -437,7 +442,6 @@ function openCreatePart() {
 }
 
 async function openEditPart(partId) {
-  hideSidePanel();
   const p = await apiFetch(`/parts/${partId}`);
   showModal('부품 수정', partForm(p), async () => {
     const data = getPartFormData();
@@ -450,15 +454,19 @@ async function openEditPart(partId) {
     hideModal();
     loadTree();
     loadParts();
+    const updatedPart = await apiFetch(`/parts/${partId}`);
+    const updatedDeals = await apiFetch(`/parts/${partId}/deals`);
+    renderDetailPanel(updatedPart, updatedDeals);
   }, { large: true });
 }
 
 async function deletePart(partId, name) {
-  hideSidePanel();
   showConfirm('부품 삭제', `"${name}"을(를) 삭제하시겠습니까? 납품 내역도 함께 삭제됩니다.`, async () => {
     await apiFetch(`/parts/${partId}`, { method: 'DELETE' });
     showToast('삭제되었습니다.', 'success');
     hideModal();
+    const pip = document.getElementById('part-detail-inline');
+    if (pip) pip.style.display = 'none';
     loadTree();
     loadParts();
   });

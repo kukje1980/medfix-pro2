@@ -28,7 +28,7 @@
     </div>
 
     <!-- Parts Table -->
-    <div class="table-wrap" style="margin-top:0">
+    <div class="table-wrap" style="margin-top:0;flex-shrink:0">
       <table>
         <thead>
           <tr>
@@ -48,6 +48,9 @@
         <div class="pagination-controls"></div>
       </div>
     </div>
+
+    <!-- Inline Detail Panel -->
+    <div id="part-detail-inline" style="display:none"></div>
   </div>
 </div>
 
@@ -167,7 +170,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  overflow: hidden;
+  overflow-y: auto;
   min-width: 0;
 }
 
@@ -191,13 +194,141 @@
 }
 
 .parts-content .table-wrap {
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
+  flex-shrink: 0;
 }
 
-.parts-content .table-wrap table { flex: 1; }
+/* Inline detail panel */
+.pip {
+  background: #fff;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  animation: pipSlideUp .25s ease;
+}
+
+@keyframes pipSlideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.pip-header {
+  padding: 12px 16px;
+  background: var(--color-gray-50);
+  border-bottom: 1px solid var(--color-gray-200);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pip-header h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 2px;
+}
+
+.pip-header .pip-sub {
+  font-size: 11px;
+  color: var(--color-gray-500);
+}
+
+.pip-header .pip-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.pip-symptom {
+  padding: 10px 16px;
+  background: #fffbeb;
+  border-bottom: 1px solid #fde68a;
+  font-size: 12px;
+  color: #92400e;
+  line-height: 1.5;
+}
+
+.pip-prices {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+.pip-card {
+  background: var(--color-gray-50);
+  border-radius: 7px;
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.pip-card label {
+  font-size: 10px;
+  color: var(--color-gray-500);
+  display: block;
+  margin-bottom: 3px;
+  letter-spacing: .3px;
+}
+
+.pip-card .pv {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-gray-800);
+  font-variant-numeric: tabular-nums;
+}
+
+.pip-card .pv.blue { color: var(--color-primary); }
+.pip-card .pv.amber { color: #d97706; }
+
+.pip-deals {
+  padding: 14px 16px;
+}
+
+.pip-deals-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.pip-deals-header h4 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-gray-600);
+}
+
+table.pip-dt {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+table.pip-dt thead th {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 2px solid var(--color-primary);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-gray-500);
+  white-space: nowrap;
+}
+
+table.pip-dt thead th.r { text-align: right; }
+
+table.pip-dt tbody td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--color-gray-100);
+  color: var(--color-gray-700);
+}
+
+table.pip-dt tbody td.r {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+table.pip-dt tbody tr:hover { background: var(--color-gray-50); }
 
 /* Detail panel overrides */
 .part-detail-section { margin-bottom: 20px; }
@@ -267,6 +398,11 @@
     max-height: 300px;
   }
   .price-cards { grid-template-columns: repeat(2, 1fr); }
+  .pip-prices { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .pip-prices { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
 {% endblock %}
