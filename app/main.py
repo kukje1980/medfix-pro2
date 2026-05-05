@@ -8,8 +8,9 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 
 from app.database import engine, Base, SessionLocal
-from app.models import Customer, Device, Technician, ServiceRequest, ServiceHistory
+from app.models import Customer, Device, Technician, ServiceRequest, ServiceHistory, Part, PartDeal, PartMoveLog
 from app.routers import customers, devices, technicians, service_requests, service_history, dashboard
+from app.routers import parts
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -54,6 +55,7 @@ app.include_router(devices.router, prefix="/api/v1")
 app.include_router(technicians.router, prefix="/api/v1")
 app.include_router(service_requests.router, prefix="/api/v1")
 app.include_router(service_history.router, prefix="/api/v1")
+app.include_router(parts.router, prefix="/api/v1")
 
 
 # Page Routes
@@ -85,3 +87,8 @@ async def page_service_requests(request: Request):
 @app.get("/service-history", response_class=HTMLResponse)
 async def page_service_history(request: Request):
     return templates.TemplateResponse("service-history.html", {"request": request})
+
+
+@app.get("/parts", response_class=HTMLResponse)
+async def page_parts(request: Request):
+    return templates.TemplateResponse("parts.html", {"request": request})
