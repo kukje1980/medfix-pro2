@@ -204,6 +204,7 @@ def seed_parts(db: Session, data: SeedData):
         part_code_map[row.part_code] = p.id
         inserted_parts += 1
 
+    affected_part_ids: set[int] = set()
     if data.deals:
         for d in data.deals:
             pid = part_code_map.get(d.part_code)
@@ -222,6 +223,15 @@ def seed_parts(db: Session, data: SeedData):
             )
             db.add(deal)
             inserted_deals += 1
+            affected_part_ids.add(pid)
+
+    # 거래가 추가된 부품의 deal_count/avg_price/min_price/max_price 재계산
+    if affected_part_ids:
+        db.flush()
+        for pid in affected_part_ids:
+            part = db.query(Part).filter(Part.id == pid).first()
+            if part:
+                _recalc_deal_stats(db, part)
 
     db.commit()
     return {"parts": inserted_parts, "deals": inserted_deals, "skipped": skipped}

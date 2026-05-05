@@ -666,7 +666,7 @@ async function handleExcelFile(e) {
       const formData = new FormData();
       formData.append('file', file);
       if (companyOverride) formData.append('company', companyOverride);
-      const resp = await fetch('/parts/seed-excel', { method: 'POST', body: formData });
+      const resp = await fetch('/api/v1/parts/seed-excel', { method: 'POST', body: formData });
       const result = await resp.json();
       if (!resp.ok) {
         // 진단 정보가 객체로 오면 풀어서 표시
