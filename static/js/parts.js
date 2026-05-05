@@ -7,6 +7,7 @@ const state = {
   category: '',
   model: '',
   selectedPartId: null,
+  sortBy: 'deal_count',
 };
 
 // ===== INIT =====
@@ -28,7 +29,8 @@ async function init() {
   });
 
   document.getElementById('btn-seed-upload').addEventListener('click', openSeedUpload);
-  document.getElementById('seed-file-input').addEventListener('change', handleSeedFile);
+  document.getElementById('seed-file-input').addEventListener('change', handleJsonFile);
+  document.getElementById('seed-excel-input').addEventListener('change', handleExcelFile);
 }
 
 // ===== TREE =====
@@ -146,45 +148,71 @@ function updateBreadcrumb() {
 // ===== PARTS TABLE =====
 async function loadParts() {
   const tbody = document.getElementById('parts-tbody');
-  tbody.innerHTML = `<tr><td colspan="7" class="loading"><div class="spinner"></div> 불러오는 중...</td></tr>`;
-  const params = new URLSearchParams({ page: state.page, size: state.size });
+  const isSearch = state.search.length >= 1;
+  const colSpan = isSearch ? 8 : 7;
+  tbody.innerHTML = `<tr><td colspan="${colSpan}" class="loading"><div class="spinner"></div> 불러오는 중...</td></tr>`;
+
+  // 검색 모드일 때 thead에 모델 컬럼 추가
+  const thead = document.querySelector('#parts-tbody').closest('table').querySelector('thead tr');
+  if (thead) {
+    const hasModelCol = thead.querySelector('[data-col="model"]');
+    if (isSearch && !hasModelCol) {
+      const modelTh = document.createElement('th');
+      modelTh.dataset.col = 'model';
+      modelTh.textContent = '모델';
+      thead.insertBefore(modelTh, thead.children[2]);
+    } else if (!isSearch && hasModelCol) {
+      hasModelCol.remove();
+    }
+  }
+
+  const params = new URLSearchParams({ page: state.page, size: state.size, sort_by: state.sortBy });
   if (state.search) params.set('search', state.search);
   if (state.company) params.set('company', state.company);
   if (state.category) params.set('category', state.category);
   if (state.model) params.set('model', state.model);
   try {
     const data = await apiFetch(`/parts?${params}`);
-    renderPartsTable(tbody, data.items);
+    renderPartsTable(tbody, data.items, isSearch);
     renderPagination(
       document.getElementById('parts-pagination'),
       data.total, data.page, data.size, data.pages,
       p => { state.page = p; loadParts(); }
     );
   } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--color-danger)">${escHtml(e.message)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center;padding:40px;color:var(--color-danger)">${escHtml(e.message)}</td></tr>`;
   }
 }
 
-function renderPartsTable(tbody, items) {
+function dealBadge(count) {
+  if (!count || count === 0) return '<span style="color:var(--color-gray-400);font-size:12px">-</span>';
+  if (count >= 20) return `<span class="badge" style="background:rgba(6,214,160,.15);color:#047857;font-weight:600">${count}건</span>`;
+  if (count >= 5)  return `<span class="badge" style="background:rgba(0,119,182,.12);color:#0369a1;font-weight:600">${count}건</span>`;
+  return `<span class="badge" style="background:var(--color-gray-100);color:var(--color-gray-500)">${count}건</span>`;
+}
+
+function renderPartsTable(tbody, items, isSearch = false) {
   if (!items || items.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--color-gray-400)">부품이 없습니다.</td></tr>`;
+    const colSpan = isSearch ? 8 : 7;
+    tbody.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center;padding:40px;color:var(--color-gray-400)">부품이 없습니다.</td></tr>`;
     return;
   }
   tbody.innerHTML = items.map(p => `
-    <tr data-id="${p.id}">
-      <td><code style="font-size:12px;background:var(--color-gray-100);padding:2px 6px;border-radius:4px">${escHtml(p.part_code)}</code></td>
+    <tr data-id="${p.id}" style="cursor:pointer">
+      <td><code style="font-size:11px;background:var(--color-gray-100);padding:2px 6px;border-radius:4px">${escHtml(p.part_code)}</code></td>
       <td><strong>${escHtml(p.part_name)}</strong></td>
-      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--color-gray-500);font-size:12px">${escHtml(p.symptom || '-')}</td>
+      ${isSearch ? `<td style="font-size:12px;color:var(--color-gray-500)">${escHtml(p.model)}</td>` : ''}
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:${p.symptom ? 'var(--color-danger)' : 'var(--color-gray-400)'}">${escHtml(p.symptom || '-')}</td>
       <td style="text-align:right;font-size:12px">${fmtPrice(p.cost_avg)}</td>
-      <td style="text-align:right;font-size:12px">${fmtPrice(p.local_price)}</td>
-      <td style="text-align:right;font-size:12px">${fmtPrice(p.univ_price)}</td>
-      <td style="text-align:right">
-        ${p.deal_count > 0 ? `<span class="badge" style="background:#fef9c3;color:#92400e">${p.deal_count}건</span>` : '<span style="color:var(--color-gray-400);font-size:12px">-</span>'}
-      </td>
+      <td style="text-align:right;font-size:12px;font-weight:600;color:var(--color-primary)">${fmtMan(p.local_price)}</td>
+      <td style="text-align:right;font-size:12px;font-weight:600;color:var(--color-primary)">${fmtMan(p.univ_price)}</td>
+      <td style="text-align:right">${dealBadge(p.deal_count)}</td>
     </tr>`).join('');
 
   tbody.querySelectorAll('tr').forEach(tr => {
     tr.addEventListener('click', () => {
+      tbody.querySelectorAll('tr').forEach(r => r.classList.remove('selected'));
+      tr.classList.add('selected');
       const id = parseInt(tr.dataset.id);
       const part = items.find(p => p.id === id);
       if (part) showPartDetail(part);
@@ -195,6 +223,11 @@ function renderPartsTable(tbody, items) {
 function fmtPrice(val) {
   if (val == null) return '<span style="color:var(--color-gray-400)">-</span>';
   return Number(val).toLocaleString('ko-KR') + '원';
+}
+
+function fmtMan(val) {
+  if (val == null) return '<span style="color:var(--color-gray-400)">-</span>';
+  return Number(val).toLocaleString('ko-KR') + '만';
 }
 
 // ===== PART DETAIL PANEL =====
@@ -475,35 +508,87 @@ async function deletePart(partId, name) {
 // ===== SEED DATA UPLOAD =====
 function openSeedUpload() {
   showModal('데이터 가져오기', `
-    <div style="text-align:center;padding:10px 0">
-      <div style="font-size:36px;margin-bottom:12px">📦</div>
-      <p style="color:var(--color-gray-600);margin-bottom:16px">seed_data_complete.json 파일을 업로드하면<br>부품 및 납품 내역 데이터가 자동으로 등록됩니다.</p>
-      <button class="btn btn-primary" onclick="document.getElementById('seed-file-input').click()">JSON 파일 선택</button>
-      <div id="seed-status" style="margin-top:12px;font-size:13px;color:var(--color-gray-500)"></div>
+    <div style="padding:4px 0">
+      <p style="color:var(--color-gray-600);margin-bottom:20px;font-size:13px;line-height:1.6">
+        부품 데이터를 <strong>JSON</strong> 또는 <strong>Excel(xlsx)</strong> 형식으로 업로드하세요.<br>
+        이미 등록된 부품(부품코드+회사+모델 기준)은 건너뜁니다.
+      </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <div style="border:2px dashed var(--color-gray-200);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color .15s"
+             onclick="document.getElementById('seed-file-input').click()"
+             onmouseover="this.style.borderColor='var(--color-primary)'"
+             onmouseout="this.style.borderColor='var(--color-gray-200)'">
+          <div style="font-size:32px;margin-bottom:8px">📄</div>
+          <div style="font-size:13px;font-weight:600;color:var(--color-gray-700);margin-bottom:4px">JSON 업로드</div>
+          <div style="font-size:11px;color:var(--color-gray-400)">seed_data_complete.json</div>
+        </div>
+        <div style="border:2px dashed var(--color-gray-200);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color .15s"
+             onclick="document.getElementById('seed-excel-input').click()"
+             onmouseover="this.style.borderColor='#16a34a'"
+             onmouseout="this.style.borderColor='var(--color-gray-200)'">
+          <div style="font-size:32px;margin-bottom:8px">📊</div>
+          <div style="font-size:13px;font-weight:600;color:var(--color-gray-700);margin-bottom:4px">Excel 업로드</div>
+          <div style="font-size:11px;color:var(--color-gray-400)">.xlsx / .xls 파일</div>
+        </div>
+      </div>
+      <div style="background:var(--color-gray-50);border-radius:8px;padding:12px;font-size:11px;color:var(--color-gray-500);line-height:1.7">
+        <strong>Excel 컬럼명 (한글/영문):</strong><br>
+        회사·제조사 / 형명·분류 / 모델·모델명 / 품번·품목코드 / 품명·부품명<br>
+        원가 / 로컬가 / 대학가·종병가 / 증상·교체증상 / 납품건수<br>
+        <em>납품내역 시트: 병원·거래처 / 납품일 / 납품가·납품단가 / 실원가</em>
+      </div>
+      <div id="seed-status" style="margin-top:14px;font-size:13px;text-align:center"></div>
     </div>
   `, null, { saveLabel: '닫기', saveBtnClass: 'btn-secondary' });
   document.querySelector('#modal-overlay #modal-save-btn').onclick = hideModal;
 }
 
-async function handleSeedFile(e) {
+function _showSeedStatus(msg, type = 'info') {
+  const el = document.getElementById('seed-status');
+  if (!el) return;
+  const colors = { info: 'var(--color-gray-500)', success: 'var(--color-success)', error: 'var(--color-danger)' };
+  el.innerHTML = `<span style="color:${colors[type]}">${type === 'success' ? '✓ ' : type === 'error' ? '✕ ' : ''}${escHtml(msg)}</span>`;
+}
+
+async function handleJsonFile(e) {
   const file = e.target.files[0];
   if (!file) return;
-  const statusEl = document.getElementById('seed-status');
-  if (statusEl) statusEl.textContent = '파일 파싱 중...';
+  _showSeedStatus('JSON 파싱 중...');
   try {
     const text = await file.text();
     const json = JSON.parse(text);
-    if (statusEl) statusEl.textContent = `${(json.parts||[]).length}건 부품, ${(json.deals||[]).length}건 납품 내역 발견. 업로드 중...`;
-    const result = await apiFetch('/parts/seed', { method: 'POST', body: JSON.stringify(json) });
-    const msg = `완료: 부품 ${result.parts}건 등록, 납품 ${result.deals}건 등록, ${result.skipped}건 중복 건너뜀`;
-    if (statusEl) statusEl.innerHTML = `<span style="color:var(--color-success)">✓ ${escHtml(msg)}</span>`;
+    const pCount = (json.parts || json.part_deals ? json.parts?.length : null) ?? Object.keys(json).length;
+    _showSeedStatus(`부품 ${(json.parts||[]).length}건, 납품 ${(json.part_deals||json.deals||[]).length}건 발견. 업로드 중...`);
+    const payload = { parts: json.parts || [], deals: json.part_deals || json.deals || [] };
+    const result = await apiFetch('/parts/seed', { method: 'POST', body: JSON.stringify(payload) });
+    const msg = `부품 ${result.parts}건 등록, 납품 ${result.deals}건 등록, ${result.skipped}건 중복 건너뜀`;
+    _showSeedStatus(msg, 'success');
     showToast(msg, 'success');
-    loadTree();
-    loadParts();
+    loadTree(); loadParts();
   } catch (err) {
-    const msg = err.message || '업로드 실패';
-    if (statusEl) statusEl.innerHTML = `<span style="color:var(--color-danger)">✕ ${escHtml(msg)}</span>`;
-    showToast(msg, 'error');
+    _showSeedStatus(err.message || 'JSON 업로드 실패', 'error');
+    showToast(err.message || 'JSON 업로드 실패', 'error');
+  }
+  e.target.value = '';
+}
+
+async function handleExcelFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  _showSeedStatus('Excel 파싱 중...');
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const resp = await fetch('/parts/seed-excel', { method: 'POST', body: formData });
+    const result = await resp.json();
+    if (!resp.ok) throw new Error(result.detail || 'Excel 업로드 실패');
+    const msg = `부품 ${result.parts}건 등록, 납품 ${result.deals}건 등록, ${result.skipped}건 중복 건너뜀`;
+    _showSeedStatus(msg, 'success');
+    showToast(msg, 'success');
+    loadTree(); loadParts();
+  } catch (err) {
+    _showSeedStatus(err.message || 'Excel 업로드 실패', 'error');
+    showToast(err.message || 'Excel 업로드 실패', 'error');
   }
   e.target.value = '';
 }

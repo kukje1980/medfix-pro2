@@ -32,13 +32,13 @@
       <table>
         <thead>
           <tr>
-            <th>부품코드</th>
-            <th>부품명</th>
-            <th>증상</th>
+            <th>품목코드</th>
+            <th>품명</th>
+            <th>교체증상</th>
             <th style="text-align:right">원가</th>
-            <th style="text-align:right">로컬가</th>
-            <th style="text-align:right">대학가</th>
-            <th style="text-align:right">거래수</th>
+            <th style="text-align:right">로컬(만)</th>
+            <th style="text-align:right">대학(만)</th>
+            <th style="text-align:right">납품건수</th>
           </tr>
         </thead>
         <tbody id="parts-tbody"></tbody>
@@ -54,8 +54,9 @@
   </div>
 </div>
 
-<!-- Seed Upload Modal Body (hidden, injected into modal) -->
+<!-- Hidden file inputs for upload -->
 <input type="file" id="seed-file-input" accept=".json" style="display:none">
+<input type="file" id="seed-excel-input" accept=".xlsx,.xls" style="display:none">
 
 <style>
 .parts-layout {

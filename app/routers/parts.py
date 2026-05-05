@@ -1,5 +1,6 @@
 import math
-from fastapi import APIRouter, Depends, HTTPException, Query
+import io
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.part import (
@@ -7,6 +8,7 @@ from app.schemas.part import (
     PartDealCreate, PartDealResponse, SeedData,
 )
 import app.crud.part as crud
+from app.utils.excel_parser import parse_parts_excel
 
 router = APIRouter(prefix="/parts", tags=["부품관리"])
 
@@ -24,9 +26,10 @@ def list_parts(
     company: str | None = None,
     category: str | None = None,
     model: str | None = None,
+    sort_by: str = Query("deal_count", regex="^(deal_count|part_code|part_name)$"),
     db: Session = Depends(get_db),
 ):
-    items, total = crud.get_parts(db, page=page, size=size, search=search, company=company, category=category, model=model)
+    items, total = crud.get_parts(db, page=page, size=size, search=search, company=company, category=category, model=model, sort_by=sort_by)
     data = [{c.name: getattr(p, c.name) for c in p.__table__.columns} for p in items]
     return {
         "items": data,
@@ -93,4 +96,17 @@ def delete_deal(deal_id: int, db: Session = Depends(get_db)):
 @router.post("/seed")
 def seed(data: SeedData, db: Session = Depends(get_db)):
     result = crud.seed_parts(db, data)
+    return result
+
+
+@router.post("/seed-excel")
+async def seed_excel(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    if not file.filename.lower().endswith((".xlsx", ".xls")):
+        raise HTTPException(status_code=400, detail="xlsx 또는 xls 파일만 업로드 가능합니다.")
+    content = await file.read()
+    try:
+        seed_data = parse_parts_excel(io.BytesIO(content))
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=f"Excel 파싱 오류: {str(e)}")
+    result = crud.seed_parts(db, seed_data)
     return result

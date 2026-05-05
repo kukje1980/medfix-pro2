@@ -13,6 +13,7 @@ def get_parts(
     company: str | None = None,
     category: str | None = None,
     model: str | None = None,
+    sort_by: str = "deal_count",
 ):
     q = db.query(Part)
     if search:
@@ -32,7 +33,12 @@ def get_parts(
     if model:
         q = q.filter(Part.model == model)
     total = q.count()
-    items = q.order_by(Part.company, Part.category, Part.model, Part.part_code).offset((page - 1) * size).limit(size).all()
+    sort_col = {
+        "deal_count": Part.deal_count.desc(),
+        "part_code": Part.part_code.asc(),
+        "part_name": Part.part_name.asc(),
+    }.get(sort_by, Part.deal_count.desc())
+    items = q.order_by(sort_col, Part.part_code).offset((page - 1) * size).limit(size).all()
     return items, total
 
 
