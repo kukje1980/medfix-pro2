@@ -100,12 +100,19 @@ def seed(data: SeedData, db: Session = Depends(get_db)):
 
 
 @router.post("/seed-excel")
-async def seed_excel(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def seed_excel(
+    file: UploadFile = File(...),
+    company: str | None = None,
+    db: Session = Depends(get_db),
+):
     if not file.filename.lower().endswith((".xlsx", ".xls")):
         raise HTTPException(status_code=400, detail="xlsx 또는 xls 파일만 업로드 가능합니다.")
     content = await file.read()
     try:
-        seed_data = parse_parts_excel(io.BytesIO(content))
+        seed_data = parse_parts_excel(
+            io.BytesIO(content),
+            company_override=company or None,
+        )
     except Exception as e:
         raise HTTPException(status_code=422, detail=f"Excel 파싱 오류: {str(e)}")
     result = crud.seed_parts(db, seed_data)

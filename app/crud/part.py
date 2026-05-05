@@ -75,21 +75,41 @@ def delete_part(db: Session, part_id: int):
 
 
 def get_tree(db: Session):
-    rows = db.query(Part.company, Part.category, Part.model, func.count(Part.id).label("part_count")).group_by(Part.company, Part.category, Part.model).order_by(Part.company, Part.category, Part.model).all()
+    rows = db.query(
+        Part.company, Part.category, Part.model,
+        func.count(Part.id).label("part_count"),
+        func.sum(Part.deal_count).label("deal_sum"),
+    ).group_by(Part.company, Part.category, Part.model).all()
+
     tree: dict = {}
-    for company, category, model, cnt in rows:
+    for company, category, model, part_count, deal_sum in rows:
+        ds = deal_sum or 0
         if company not in tree:
             tree[company] = {}
         if category not in tree[company]:
             tree[company][category] = {}
-        tree[company][category][model] = cnt
+        tree[company][category][model] = ds
+
     result = []
     for company, cats in tree.items():
         cat_list = []
         for category, models in cats.items():
-            model_list = [{"model": m, "count": c} for m, c in models.items()]
-            cat_list.append({"category": category, "models": model_list, "count": sum(m["count"] for m in model_list)})
-        result.append({"company": company, "categories": cat_list, "count": sum(c["count"] for c in cat_list)})
+            model_list = sorted(
+                [{"model": m, "count": c} for m, c in models.items()],
+                key=lambda x: x["count"], reverse=True
+            )
+            cat_list.append({
+                "category": category,
+                "models": model_list,
+                "count": sum(m["count"] for m in model_list),
+            })
+        cat_list.sort(key=lambda x: x["count"], reverse=True)
+        result.append({
+            "company": company,
+            "categories": cat_list,
+            "count": sum(c["count"] for c in cat_list),
+        })
+    result.sort(key=lambda x: x["count"], reverse=True)
     return result
 
 

@@ -8,6 +8,7 @@ const state = {
   model: '',
   selectedPartId: null,
   sortBy: 'deal_count',
+  costUnlocked: sessionStorage.getItem('cost_unlocked') === '1',
 };
 
 // ===== INIT =====
@@ -203,7 +204,7 @@ function renderPartsTable(tbody, items, isSearch = false) {
       <td><strong>${escHtml(p.part_name)}</strong></td>
       ${isSearch ? `<td style="font-size:12px;color:var(--color-gray-500)">${escHtml(p.model)}</td>` : ''}
       <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:${p.symptom ? 'var(--color-danger)' : 'var(--color-gray-400)'}">${escHtml(p.symptom || '-')}</td>
-      <td style="text-align:right;font-size:12px">${fmtPrice(p.cost_avg)}</td>
+      <td style="text-align:right;font-size:12px">${fmtCost(p.cost_avg)}</td>
       <td style="text-align:right;font-size:12px;font-weight:600;color:var(--color-primary)">${fmtMan(p.local_price)}</td>
       <td style="text-align:right;font-size:12px;font-weight:600;color:var(--color-primary)">${fmtMan(p.univ_price)}</td>
       <td style="text-align:right">${dealBadge(p.deal_count)}</td>
@@ -230,6 +231,64 @@ function fmtMan(val) {
   return Number(val).toLocaleString('ko-KR') + '만';
 }
 
+// 원가 표시 (잠금 상태면 자물쇠 아이콘)
+function fmtCost(val, showUnlockHint = false) {
+  if (!state.costUnlocked) {
+    return `<span class="cost-locked" onclick="unlockCost()" title="클릭하여 원가 열람 비밀번호 입력" style="cursor:pointer;font-size:14px;user-select:none">🔒</span>`;
+  }
+  if (val == null) return '<span style="color:var(--color-gray-400)">-</span>';
+  return Number(val).toLocaleString('ko-KR') + '원';
+}
+
+function unlockCost() {
+  showModal('원가 열람', `
+    <div class="form-group">
+      <label class="form-label">비밀번호를 입력하세요</label>
+      <input type="password" id="cost-pw" class="form-control" placeholder="비밀번호" style="font-size:16px;letter-spacing:4px" autofocus>
+      <div id="cost-pw-err" style="color:var(--color-danger);font-size:12px;margin-top:6px;display:none">비밀번호가 틀립니다.</div>
+    </div>
+  `, () => {
+    const pw = document.getElementById('cost-pw')?.value || '';
+    if (pw === '15901') {
+      state.costUnlocked = true;
+      sessionStorage.setItem('cost_unlocked', '1');
+      hideModal();
+      loadParts();
+      // 열린 상세 패널 갱신
+      if (state.selectedPartId) {
+        apiFetch(`/parts/${state.selectedPartId}`).then(part =>
+          apiFetch(`/parts/${state.selectedPartId}/deals`).then(deals =>
+            renderDetailPanel(part, deals)
+          )
+        );
+      }
+    } else {
+      const errEl = document.getElementById('cost-pw-err');
+      if (errEl) errEl.style.display = '';
+      document.getElementById('cost-pw')?.select();
+      return false; // 모달 닫지 않음
+    }
+  }, { saveLabel: '확인' });
+
+  // 엔터키로 제출
+  setTimeout(() => {
+    const input = document.getElementById('cost-pw');
+    if (input) {
+      input.focus();
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.querySelector('#modal-overlay #modal-save-btn')?.click();
+      });
+    }
+  }, 100);
+}
+
+function lockCost() {
+  state.costUnlocked = false;
+  sessionStorage.removeItem('cost_unlocked');
+  loadParts();
+  document.getElementById('part-detail-inline').style.display = 'none';
+}
+
 // ===== PART DETAIL PANEL =====
 async function showPartDetail(part) {
   state.selectedPartId = part.id;
@@ -247,6 +306,9 @@ function renderDetailPanel(part, deals) {
         <div class="pip-sub">${escHtml(part.company)} › ${escHtml(part.category)} › ${escHtml(part.model)}</div>
       </div>
       <div class="pip-actions">
+        ${state.costUnlocked
+          ? `<button class="btn btn-sm" onclick="lockCost()" title="원가 다시 잠금" style="font-size:12px;padding:3px 8px">🔒 잠금</button>`
+          : `<button class="btn btn-sm" onclick="unlockCost()" title="원가 열람" style="font-size:12px;padding:3px 8px;color:var(--color-primary)">🔓 원가 열람</button>`}
         <button class="btn btn-secondary btn-sm" onclick="openEditPart(${part.id})">✏️ 수정</button>
         <button class="btn btn-danger btn-sm" onclick="deletePart(${part.id}, '${escHtml(part.part_name).replace(/'/g, "\\'")}')">🗑 삭제</button>
         <button class="btn btn-sm" onclick="document.getElementById('part-detail-inline').style.display='none'" style="padding:4px 10px;font-size:14px;line-height:1">×</button>
@@ -255,16 +317,23 @@ function renderDetailPanel(part, deals) {
 
   if (part.symptom) {
     h += `<div class="pip-symptom">
-      <strong>⚠ ${escHtml(part.symptom)}</strong>
-      ${part.symptom_detail ? `<div style="margin-top:4px">${escHtml(part.symptom_detail)}</div>` : ''}
-      ${part.symptom_location ? `<div style="margin-top:3px;font-size:11px">📍 ${escHtml(part.symptom_location)}</div>` : ''}
+      <strong>⚠ 교체 증상: ${escHtml(part.symptom)}</strong>
+      ${part.symptom_detail ? `<div style="margin-top:5px">💡 ${escHtml(part.symptom_detail)}</div>` : ''}
+      ${part.symptom_location ? `<div style="margin-top:3px;font-size:11px">📍 교체 위치: ${escHtml(part.symptom_location)}</div>` : ''}
     </div>`;
   }
 
+  const costDisp = state.costUnlocked
+    ? (part.cost_avg != null ? `<span style="font-weight:700">₩${Number(part.cost_avg).toLocaleString('ko-KR')}</span>` : '-')
+    : `<span onclick="unlockCost()" style="cursor:pointer;font-size:16px" title="클릭하여 비밀번호 입력">🔒</span>`;
+
   h += `<div class="pip-prices">
-    <div class="pip-card"><label>원가</label><div class="pv">${fw(part.cost_avg)}</div></div>
-    <div class="pip-card"><label>로컬가</label><div class="pv blue">${fw(part.local_price)}</div></div>
-    <div class="pip-card"><label>대학가</label><div class="pv blue">${fw(part.univ_price)}</div></div>
+    <div class="pip-card cost-card" style="${state.costUnlocked ? '' : 'cursor:pointer'}" ${state.costUnlocked ? '' : 'onclick="unlockCost()"'}>
+      <label>원가${state.costUnlocked ? '' : ' 🔒'}</label>
+      <div class="pv">${costDisp}</div>
+    </div>
+    <div class="pip-card"><label>로컬가(만)</label><div class="pv blue">${fw(part.local_price)}</div></div>
+    <div class="pip-card"><label>종병가(만)</label><div class="pv blue">${fw(part.univ_price)}</div></div>
     <div class="pip-card"><label>평균단가</label><div class="pv amber">${fw(part.avg_price)}</div></div>
     <div class="pip-card"><label>최저납품가</label><div class="pv">${fw(part.min_price)}</div></div>
     <div class="pip-card"><label>최고납품가</label><div class="pv">${fw(part.max_price)}</div></div>
@@ -278,7 +347,7 @@ function renderDetailPanel(part, deals) {
         <button class="btn btn-secondary btn-sm" onclick="openAddDeal(${part.id})">+ 납품 등록</button>
       </div>
     </div>
-    <div id="deals-table-wrap">${renderDealsTable(deals)}</div>
+    <div id="deals-table-wrap">${renderDealsTable(deals, state.costUnlocked)}</div>
   </div>`;
 
   h += `</div>`;
@@ -289,10 +358,13 @@ function renderDetailPanel(part, deals) {
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function renderDealsTable(deals) {
+function renderDealsTable(deals, showCost = false) {
   if (!deals || deals.length === 0) {
     return `<div style="text-align:center;padding:20px;color:var(--color-gray-400);font-size:12px">납품 내역이 없습니다.</div>`;
   }
+  const costCell = showCost
+    ? `<th class="r">원가</th>`
+    : `<th class="r" style="cursor:pointer;color:var(--color-primary)" onclick="unlockCost()" title="원가 열람">원가 🔒</th>`;
   return `<table class="pip-dt">
     <thead>
       <tr>
@@ -300,7 +372,7 @@ function renderDealsTable(deals) {
         <th>납품일</th>
         <th class="r">수량</th>
         <th class="r">납품단가</th>
-        <th class="r">실원가</th>
+        ${costCell}
         <th></th>
       </tr>
     </thead>
@@ -310,7 +382,7 @@ function renderDealsTable(deals) {
         <td>${formatDateShort(d.deal_date)}</td>
         <td class="r">${d.quantity || 1}</td>
         <td class="r" style="font-weight:600;color:var(--color-primary)">${fmtPrice(d.deal_price)}</td>
-        <td class="r">${fmtPrice(d.cost_price)}</td>
+        <td class="r">${showCost ? fmtPrice(d.cost_price) : '<span onclick="unlockCost()" style="cursor:pointer;font-size:13px" title="클릭하여 비밀번호 입력">🔒</span>'}</td>
         <td><button class="btn btn-sm btn-danger" style="padding:2px 7px;font-size:11px" onclick="deleteDeal(${d.id}, ${d.part_id})">삭제</button></td>
       </tr>`).join('')}
     </tbody>
@@ -322,7 +394,7 @@ async function filterDeals(partId) {
   const params = hospital ? `?hospital=${encodeURIComponent(hospital)}` : '';
   const deals = await apiFetch(`/parts/${partId}/deals${params}`);
   const wrap = document.getElementById('deals-table-wrap');
-  if (wrap) wrap.innerHTML = renderDealsTable(deals);
+  if (wrap) wrap.innerHTML = renderDealsTable(deals, state.costUnlocked);
 }
 
 async function deleteDeal(dealId, partId) {
@@ -575,21 +647,58 @@ async function handleJsonFile(e) {
 async function handleExcelFile(e) {
   const file = e.target.files[0];
   if (!file) return;
-  _showSeedStatus('Excel 파싱 중...');
-  try {
-    const formData = new FormData();
-    formData.append('file', file);
-    const resp = await fetch('/parts/seed-excel', { method: 'POST', body: formData });
-    const result = await resp.json();
-    if (!resp.ok) throw new Error(result.detail || 'Excel 업로드 실패');
-    const msg = `부품 ${result.parts}건 등록, 납품 ${result.deals}건 등록, ${result.skipped}건 중복 건너뜀`;
-    _showSeedStatus(msg, 'success');
-    showToast(msg, 'success');
-    loadTree(); loadParts();
-  } catch (err) {
-    _showSeedStatus(err.message || 'Excel 업로드 실패', 'error');
-    showToast(err.message || 'Excel 업로드 실패', 'error');
-  }
+  _showSeedStatus(`"${file.name}" 파싱 중...`);
+
+  // 회사 자동감지 실패 대비 — 모달에서 회사명 선택 가능하도록
+  const COMPANIES = [
+    '', 'KOWA (Japan)', 'KONAN (Japan)', 'KEELER (UK)',
+    'A.R.C. Laser (Germany)', 'Phaco Handpiece (해외)',
+    'Camera/주변기기', 'NewEyesTech', '기타'
+  ];
+  const companySelect = COMPANIES.map(c =>
+    `<option value="${escHtml(c)}">${c || '-- 자동 감지 (권장) --'}</option>`
+  ).join('');
+
+  // 회사 선택 후 업로드하는 내부 함수
+  const doUpload = async (companyOverride) => {
+    _showSeedStatus(`업로드 중... (${file.name})`);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      if (companyOverride) formData.append('company', companyOverride);
+      const resp = await fetch('/parts/seed-excel', { method: 'POST', body: formData });
+      const result = await resp.json();
+      if (!resp.ok) throw new Error(result.detail || 'Excel 업로드 실패');
+      const msg = `부품 ${result.parts}건 등록, 납품 ${result.deals}건 등록, ${result.skipped}건 중복 건너뜀`;
+      _showSeedStatus(msg, 'success');
+      showToast(msg, 'success');
+      loadTree(); loadParts();
+    } catch (err) {
+      _showSeedStatus(err.message || 'Excel 업로드 실패', 'error');
+      showToast(err.message || 'Excel 업로드 실패', 'error');
+    }
+  };
+
+  // 회사 선택 모달
+  showModal('Excel 업로드 — 회사 선택', `
+    <div class="form-group">
+      <label class="form-label">파일: <strong>${escHtml(file.name)}</strong></label>
+    </div>
+    <div class="form-group">
+      <label class="form-label">회사 (자동 감지 또는 직접 선택)</label>
+      <select id="excel-company" class="form-control" style="font-size:13px">
+        ${companySelect}
+      </select>
+      <div style="font-size:11px;color:var(--color-gray-400);margin-top:4px">
+        엑셀의 시리즈명으로 자동 판별합니다. 잘못 감지되면 직접 선택하세요.
+      </div>
+    </div>
+  `, () => {
+    const company = document.getElementById('excel-company')?.value || '';
+    hideModal();
+    doUpload(company);
+  }, { saveLabel: '업로드 시작' });
+
   e.target.value = '';
 }
 

@@ -35,9 +35,9 @@
             <th>품목코드</th>
             <th>품명</th>
             <th>교체증상</th>
-            <th style="text-align:right">원가</th>
+            <th style="text-align:right;cursor:pointer" onclick="if(typeof unlockCost!=='undefined')unlockCost()" id="th-cost">원가</th>
             <th style="text-align:right">로컬(만)</th>
-            <th style="text-align:right">대학(만)</th>
+            <th style="text-align:right">종병(만)</th>
             <th style="text-align:right">납품건수</th>
           </tr>
         </thead>
@@ -330,6 +330,15 @@ table.pip-dt tbody td.r {
 }
 
 table.pip-dt tbody tr:hover { background: var(--color-gray-50); }
+
+/* 원가 잠금 표시 */
+.cost-locked { opacity: .6; transition: opacity .1s; }
+.cost-locked:hover { opacity: 1; }
+
+.cost-card { border: 1px dashed var(--color-gray-200); }
+.cost-card:hover { border-color: var(--color-primary); background: var(--color-primary-light); }
+
+#th-cost:hover { color: var(--color-primary); }
 
 /* Detail panel overrides */
 .part-detail-section { margin-bottom: 20px; }
