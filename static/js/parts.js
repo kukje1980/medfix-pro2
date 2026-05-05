@@ -668,8 +668,32 @@ async function handleExcelFile(e) {
       if (companyOverride) formData.append('company', companyOverride);
       const resp = await fetch('/parts/seed-excel', { method: 'POST', body: formData });
       const result = await resp.json();
-      if (!resp.ok) throw new Error(result.detail || 'Excel 업로드 실패');
-      const msg = `부품 ${result.parts}건 등록, 납품 ${result.deals}건 등록, ${result.skipped}건 중복 건너뜀`;
+      if (!resp.ok) {
+        // 진단 정보가 객체로 오면 풀어서 표시
+        const det = result.detail;
+        if (det && typeof det === 'object') {
+          let html = `<strong>${escHtml(det.message || 'Excel 파싱 실패')}</strong>`;
+          if (det.expected) html += `<br><small>예상 형식: ${escHtml(det.expected)}</small>`;
+          if (det.sheets && det.sheets.length) {
+            html += `<br><br><small><strong>읽은 시트 미리보기:</strong></small>`;
+            det.sheets.forEach(s => {
+              html += `<br><small>📄 [${escHtml(s.name)}]</small>`;
+              (s.first_rows || []).forEach((r, i) => {
+                html += `<br><small style="font-family:monospace;color:var(--color-gray-500)">  ${i+1}: ${r.map(escHtml).join(' | ')}</small>`;
+              });
+            });
+          }
+          const el = document.getElementById('seed-status');
+          if (el) el.innerHTML = `<div style="color:var(--color-danger);text-align:left;line-height:1.6">${html}</div>`;
+          showToast(det.message || 'Excel 파싱 실패', 'error');
+          return;
+        }
+        throw new Error(det || 'Excel 업로드 실패');
+      }
+      const parsed = result.parsed_parts != null
+        ? ` (총 ${result.parsed_parts}건 인식)`
+        : '';
+      const msg = `부품 ${result.parts}건 등록, 납품 ${result.deals}건 등록, ${result.skipped}건 중복${parsed}`;
       _showSeedStatus(msg, 'success');
       showToast(msg, 'success');
       loadTree(); loadParts();

@@ -115,5 +115,33 @@ async def seed_excel(
         )
     except Exception as e:
         raise HTTPException(status_code=422, detail=f"Excel 파싱 오류: {str(e)}")
+
+    # 인식된 부품이 0개면 진단 정보 반환
+    if len(seed_data.parts) == 0 and len(seed_data.deals) == 0:
+        # 시트 구조를 짧게 분석
+        try:
+            from openpyxl import load_workbook
+            wb = load_workbook(io.BytesIO(content), read_only=True, data_only=True)
+            sheet_info = []
+            for sn in wb.sheetnames[:3]:
+                sh = wb[sn]
+                first_rows = []
+                for i, row in enumerate(sh.iter_rows(values_only=True)):
+                    if i >= 3:
+                        break
+                    first_rows.append([str(c)[:20] if c is not None else "" for c in row[:6]])
+                sheet_info.append({"name": sn, "first_rows": first_rows})
+            wb.close()
+        except Exception:
+            sheet_info = []
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": "인식된 부품이 없습니다. Excel 형식을 확인하세요.",
+                "expected": "C열=품목코드, D열=품명 (또는 헤더에 '품목코드/품명' 포함)",
+                "sheets": sheet_info,
+            },
+        )
+
     result = crud.seed_parts(db, seed_data)
-    return result
+    return {**result, "parsed_parts": len(seed_data.parts), "parsed_deals": len(seed_data.deals)}
