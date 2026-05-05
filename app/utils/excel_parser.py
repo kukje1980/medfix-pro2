@@ -103,26 +103,78 @@ def _to_date(v) -> date | None:
 
 
 # ── 헤더 키워드 매핑 (lower-case 부분 일치) ─────────────────────────
-# 키 = 정규화된 셀 텍스트 일부, 값 = 내부 필드명. 우선순위 높은 순.
+# 정확 일치(EXACT)와 부분 일치(KEYWORDS)를 분리해서 처리.
+# 정확 일치가 우선 — 영문 컬럼명("company", "model" 등)이 잘못 매칭되는 것 방지.
+HEADER_EXACT: dict[str, str] = {
+    # 부품 마스터 (영문 정확 매칭)
+    "id": "_skip",
+    "company": "company",
+    "category": "category",
+    "model": "model",
+    "model_name": "model",
+    "part_code": "part_code",
+    "part code": "part_code",
+    "partcode": "part_code",
+    "part_name": "part_name",
+    "part name": "part_name",
+    "partname": "part_name",
+    "cost_avg": "cost_avg",
+    "cost": "cost_avg",
+    "local_price": "local_price",
+    "local": "local_price",
+    "univ_price": "univ_price",
+    "univ price": "univ_price",
+    "deal_count": "deal_count",
+    "deal count": "deal_count",
+    "avg_price": "avg_price",
+    "min_price": "min_price",
+    "max_price": "max_price",
+    "symptom": "symptom",
+    "symptom_detail": "symptom_detail",
+    "detail": "symptom_detail",
+    "symptom_location": "symptom_location",
+    "location": "symptom_location",
+    # 납품
+    "part_id": "_skip",
+    "hospital": "hospital",
+    "deal_date": "deal_date",
+    "deal date": "deal_date",
+    "quantity": "quantity",
+    "qty": "quantity",
+    "deal_price": "deal_price",
+    "deal price": "deal_price",
+    "cost_price": "cost_price",
+    "cost price": "cost_price",
+    # 한글 정확 매칭
+    "회사": "company",
+    "제조사": "company",
+    "분류": "category",
+    "카테고리": "category",
+    "형명": "category",
+    "모델명": "model",
+    "모델": "model",
+    "시리즈": "model",
+    "series": "model",
+    "키워드": "_skip",
+}
+
+# 부분 일치 (한글 위주 — 영문 충돌 없도록)
 HEADER_KEYWORDS: list[tuple[list[str], str]] = [
-    # 부품 마스터
-    (["품목코드", "품번", "파트번호", "part code", "part_code", "품목 코드"], "part_code"),
-    (["품명", "부품명", "part name", "part_name"], "part_name"),
-    (["시리즈", "series", "모델명", "모델"], "series"),
+    (["품목코드", "품번", "파트번호", "품목 코드"], "part_code"),
+    (["품명", "부품명"], "part_name"),
     (["직품모델", "제품모델"], "model2"),
-    (["거래수", "납품건수", "거래건수", "deal count"], "deal_count"),
+    (["거래수", "납품건수", "거래건수"], "deal_count"),
     (["로컬"], "local_price"),
     (["종병", "대학", "종합병원"], "univ_price"),
-    (["원가"], "cost_avg"),  # 매우 일반적이라 마지막 근처 배치
-    (["교체 증상", "교체증상", "증상", "symptom"], "symptom"),
+    (["교체 증상", "교체증상", "증상"], "symptom"),
     (["상세 설명", "상세설명", "설명"], "symptom_detail"),
     (["교체 위치", "교체위치", "위치"], "symptom_location"),
-    # 납품 내역
-    (["병원명", "병원", "거래처", "hospital"], "hospital"),
-    (["납품일", "거래일", "deal date", "deal_date"], "deal_date"),
-    (["수량", "qty", "quantity"], "quantity"),
-    (["납품단가", "납품가", "거래단가", "거래가", "deal price", "deal_price"], "deal_price"),
-    (["실원가", "납품원가", "cost price", "cost_price"], "cost_price"),
+    (["병원명", "병원", "거래처"], "hospital"),
+    (["납품일", "거래일"], "deal_date"),
+    (["수량"], "quantity"),
+    (["납품단가", "납품가", "거래단가", "거래가"], "deal_price"),
+    (["실원가", "납품원가"], "cost_price"),
+    (["원가"], "cost_avg"),  # cost_price보다 뒤 — 실원가가 먼저 매칭되도록
 ]
 
 
@@ -131,9 +183,14 @@ def _norm_cell(v) -> str:
 
 
 def _try_match_field(cell_text: str) -> str | None:
-    """헤더 셀 텍스트 → 필드명 (없으면 None)"""
+    """헤더 셀 텍스트 → 필드명 (없으면 None). 정확 일치 → 부분 일치 순."""
     if not cell_text:
         return None
+    # 정확 일치 우선
+    if cell_text in HEADER_EXACT:
+        f = HEADER_EXACT[cell_text]
+        return None if f == "_skip" else f
+    # 부분 일치
     for keywords, field in HEADER_KEYWORDS:
         for kw in keywords:
             if kw in cell_text:
@@ -244,14 +301,23 @@ def _parse_denormalized(
 
         # ── 부품 마스터 행 ──
         if part_code and part_code not in parts:
-            company, category = _classify_series(series)
+            # 명시적 company/category/model 컬럼이 있으면 우선
+            explicit_company = _clean(get("company"))
+            explicit_category = _clean(get("category"))
+            explicit_model = _clean(get("model"))
+            if not explicit_company or not explicit_category:
+                cls_c, cls_cat = _classify_series(explicit_model or series)
+                company = explicit_company or cls_c
+                category = explicit_category or cls_cat
+            else:
+                company, category = explicit_company, explicit_category
             if company_override:
                 company = company_override
 
             parts[part_code] = SeedRow(
                 company=company,
                 category=category,
-                model=series or "기타",
+                model=explicit_model or series or "기타",
                 part_code=part_code,
                 part_name=part_name or part_code,
                 cost_avg=_to_int(get("cost_avg")),
@@ -261,9 +327,9 @@ def _parse_denormalized(
                 symptom_detail=_clean(get("symptom_detail")) or None,
                 symptom_location=_clean(get("symptom_location")) or None,
                 deal_count=_to_int(get("deal_count")) or 0,
-                avg_price=None,
-                min_price=None,
-                max_price=None,
+                avg_price=_to_int(get("avg_price")),
+                min_price=_to_int(get("min_price")),
+                max_price=_to_int(get("max_price")),
             )
             current_code = part_code
             current_series = series
@@ -313,12 +379,18 @@ def _parse_parts_sheet(sheet) -> list[SeedRow]:
         part_name = _clean(get("part_name"))
         if not part_code or not part_name:
             continue
-        series = _clean(get("series"))
-        company, category = _classify_series(series)
+        # 명시적 company/category/model 컬럼 우선, 없으면 series로 분류
+        company = _clean(get("company"))
+        category = _clean(get("category"))
+        model = _clean(get("model"))
+        if not company or not category:
+            cls_company, cls_category = _classify_series(model or _clean(get("series")))
+            company = company or cls_company
+            category = category or cls_category
         parts.append(SeedRow(
             company=company,
             category=category,
-            model=series or "기타",
+            model=model or "기타",
             part_code=part_code,
             part_name=part_name,
             cost_avg=_to_int(get("cost_avg")),
@@ -328,9 +400,9 @@ def _parse_parts_sheet(sheet) -> list[SeedRow]:
             symptom_detail=_clean(get("symptom_detail")) or None,
             symptom_location=_clean(get("symptom_location")) or None,
             deal_count=_to_int(get("deal_count")) or 0,
-            avg_price=None,
-            min_price=None,
-            max_price=None,
+            avg_price=_to_int(get("avg_price")),
+            min_price=_to_int(get("min_price")),
+            max_price=_to_int(get("max_price")),
         ))
     return parts
 
