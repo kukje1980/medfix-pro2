@@ -11,6 +11,7 @@
 | v1.3 | 2026-05-04 | 부품 상세정보 인라인 패널, 가격/납품내역 표시 개선 | `7d04131` | [zip](https://github.com/kukje1980/medfix-pro2/archive/7d041317b9be389b5bb598feea2f23b95f18eebc.zip) |
 | v1.4 | 2026-05-05 | Excel/JSON 업로드, 납품건수 정렬·배지, 검색모드 모델 컬럼 | `a743e5b` | [zip](https://github.com/kukje1980/medfix-pro2/archive/a743e5bafaaef52395014266c135030995acaae9.zip) |
 | v1.5 | 2026-05-05 | Excel 비정규화 형식 파서, 원가 비밀번호, 트리 정렬, 종병가 레이블 | `b5185ad` | [zip](https://github.com/kukje1980/medfix-pro2/archive/b5185ad1a67e538de3ec2561e167f40aa2a9eea8.zip) |
-| v1.6 | 2026-05-05 | Excel 업로드 버그 수정 (부품 미인식·영문 헤더·API 경로) — **최신** | `bd1e823` | [zip](https://github.com/kukje1980/medfix-pro2/archive/bd1e823facd3493c577f051061b7d8aa459d2d28.zip) |
+| v1.6 | 2026-05-05 | Excel 업로드 버그 수정 (부품 미인식·영문 헤더·API 경로) | `bd1e823` | [zip](https://github.com/kukje1980/medfix-pro2/archive/bd1e823facd3493c577f051061b7d8aa459d2d28.zip) |
+| v1.7.0 | 2026-10-25 | **통합판** — v1.6 의 부품관리·Excel 업로드 전체 + 개발 문서(CLAUDE.md), 버전 릴리스 자동 게시(release.yml) — **최신** | 이 브랜치 | [릴리스](https://github.com/kukje1980/medfix-pro2/releases/tag/v1.7.0) |
 
 터미널에서 특정 버전으로 되돌리기: `git checkout <커밋>` (예: `git checkout b64f068`)

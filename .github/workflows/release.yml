@@ -1,0 +1,45 @@
+# 버전 릴리스 — main 에 반영될 때마다 웹 게시용 패키지(zip)를 GitHub Release v<버전> 에 올린다.
+#   버전: app/main.py 의 FastAPI(version="...")
+#   Render/Vercel 은 저장소를 직접 연결해 배포하므로, zip 은 보관·다른 서버 설치용이다.
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 기동 확인
+        run: |
+          pip install -r requirements.txt
+          python -c "from app.main import app; print(app.title, app.version)"
+
+      - name: 웹 게시용 패키지 + 릴리스
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -e
+          VER=$(python -c "from app.main import app; print(app.version)")
+          TAG="v${VER}"
+          mkdir -p out
+          git archive --format=zip -o "out/MedFix-Pro-Web-${VER}.zip" HEAD
+          NOTES="MedFix Pro (KJST 의료기기 서비스 관리) ${TAG} — 웹 게시용 패키지 (Render: render.yaml / Vercel: vercel.json). 압축을 풀고 pip install -r requirements.txt → python run.py 로도 실행됩니다. 변경 내용은 VERSIONS.md 를 보세요. (커밋 ${GITHUB_SHA})"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" out/*.zip --clobber
+            gh release edit "$TAG" --notes "$NOTES" --latest
+          else
+            gh release create "$TAG" out/*.zip --target "$GITHUB_SHA" --latest \
+              --title "MedFix Pro ${TAG}" --notes "$NOTES"
+          fi

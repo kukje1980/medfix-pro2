@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="MedFix Pro - 의료기기 서비스 관리",
     description="의료기기 서비스 관리 시스템 API",
-    version="1.0.0",
+    version="1.7.0",
     lifespan=lifespan,
 )
 
