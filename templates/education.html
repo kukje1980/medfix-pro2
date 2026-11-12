@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}장비 교육{% endblock %}
+{% block page_title %}장비 교육{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/css/education.css">
+<div class="page-header">
+  <h1>안과 장비 교육 — 안구 모형으로 보는 작동 원리</h1>
+</div>
+
+<div class="edu-tabs" id="edu-tabs"></div>
+
+<div class="edu-layout">
+  <section class="edu-player" id="edu-player">
+    <div class="edu-stage">
+      <svg id="edu-svg" viewBox="0 0 960 540" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="안구 단면 모형 애니메이션"></svg>
+      <button class="edu-bigplay" id="edu-bigplay" aria-label="재생">▶</button>
+    </div>
+    <div class="edu-caption">
+      <div class="edu-caption-step" id="edu-step-chip"></div>
+      <div class="edu-caption-text" id="edu-caption"></div>
+    </div>
+    <div class="edu-controls">
+      <button class="edu-btn" id="edu-prev" title="이전 단계 (←)">⏮</button>
+      <button class="edu-btn edu-btn-play" id="edu-play" title="재생/일시정지 (Space)">▶</button>
+      <button class="edu-btn" id="edu-next" title="다음 단계 (→)">⏭</button>
+      <div class="edu-bar" id="edu-bar">
+        <div class="edu-bar-fill" id="edu-bar-fill"></div>
+        <div class="edu-bar-marks" id="edu-bar-marks"></div>
+      </div>
+      <span class="edu-time" id="edu-time">0:00 / 0:00</span>
+      <select class="edu-speed" id="edu-speed" title="재생 속도">
+        <option value="0.5">0.5×</option>
+        <option value="1" selected>1×</option>
+        <option value="1.5">1.5×</option>
+        <option value="2">2×</option>
+      </select>
+      <button class="edu-btn" id="edu-voice" title="음성 해설 켜기/끄기">🔇</button>
+      <button class="edu-btn" id="edu-full" title="전체 화면">⛶</button>
+    </div>
+  </section>
+
+  <aside class="edu-info" id="edu-info"></aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/education.js"></script>
+{% endblock %}

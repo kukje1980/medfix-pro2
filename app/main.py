@@ -92,3 +92,8 @@ async def page_service_history(request: Request):
 @app.get("/parts", response_class=HTMLResponse)
 async def page_parts(request: Request):
     return templates.TemplateResponse("parts.html", {"request": request})
+
+
+@app.get("/education", response_class=HTMLResponse)
+async def page_education(request: Request):
+    return templates.TemplateResponse("education.html", {"request": request})

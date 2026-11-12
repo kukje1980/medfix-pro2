@@ -1,0 +1,89 @@
+/* ===== 장비 교육 ===== */
+/* 이 페이지에서만: 본문이 사이드바 옆 전체 폭을 쓰도록 한다 */
+.app-shell { grid-column: 1 / -1; min-width: 0; }
+.edu-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.edu-tab {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--color-gray-200); background: #fff;
+  color: var(--color-gray-700); font-size: 13px; font-weight: 600; font-family: inherit;
+}
+.edu-tab:hover { background: var(--color-gray-100); }
+.edu-tab.active { background: #78350f; border-color: #78350f; color: #fff; }
+
+.edu-layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; align-items: start; }
+@media (max-width: 1280px) { .edu-layout { grid-template-columns: minmax(0, 1fr); } }
+
+.edu-player { background: #0b1626; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-md); display: flex; flex-direction: column; }
+.edu-player:fullscreen { border-radius: 0; justify-content: center; }
+.edu-player:fullscreen .edu-stage { flex: 1; min-height: 0; }
+.edu-player:fullscreen .edu-stage svg { height: 100%; }
+.edu-stage { position: relative; }
+.edu-stage svg { display: block; width: 100%; aspect-ratio: 16 / 9; background: radial-gradient(ellipse at 70% 50%, #14253f 0%, #0b1626 70%); }
+.edu-stage text { fill: #d7e6ff; font-size: 14px; font-family: inherit; }
+.edu-stage .t-s { font-size: 12px; }
+.edu-stage .t-xs { font-size: 10.5px; }
+.edu-stage .t-l { font-size: 18px; font-weight: 700; }
+.edu-stage .t-xl { font-size: 30px; font-weight: 800; }
+.edu-stage .t-b { font-weight: 700; }
+.edu-stage .t-dim { fill: #8ea3c4; }
+.edu-stage .t-y { fill: #ffd866; }
+.edu-stage .t-g { fill: #6fe39a; }
+.edu-stage .t-r { fill: #ff8f8f; }
+.edu-stage .t-c { fill: #7fe3ff; }
+.edu-stage .hl { filter: drop-shadow(0 0 5px #ffd54a) drop-shadow(0 0 2px #ffd54a); }
+.edu-stage .an-lbl { cursor: pointer; }
+.edu-stage .an-lbl text { fill: #8ea3c4; }
+.edu-stage .an-lbl line { stroke: #54698c; }
+.edu-stage .an-lbl.on text { fill: #ffd866; font-weight: 700; }
+.edu-stage .an-lbl.on line { stroke: #ffd866; }
+
+.edu-bigplay {
+  position: absolute; inset: 0; margin: auto; width: 84px; height: 84px; border-radius: 50%;
+  border: 0; background: rgba(217,119,6,.92); color: #fff; font-size: 34px; cursor: pointer;
+  padding-left: 8px; box-shadow: 0 6px 24px rgba(0,0,0,.45);
+}
+.edu-bigplay.hidden { display: none; }
+
+.edu-caption { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; min-height: 78px; background: #101d32; border-top: 1px solid #1f3150; }
+.edu-caption-step { flex-shrink: 0; background: #d97706; color: #fff; font-weight: 700; font-size: 12px; padding: 4px 10px; border-radius: 6px; white-space: nowrap; }
+.edu-caption-text { color: #e7efff; font-size: 15px; line-height: 1.55; }
+
+.edu-controls { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #0a1322; }
+.edu-btn { width: 34px; height: 34px; border-radius: 8px; border: 1px solid #27395a; background: #15233b; color: #dbe7ff; cursor: pointer; font-size: 14px; flex-shrink: 0; }
+.edu-btn:hover { background: #1f3152; }
+.edu-btn.on { background: #d97706; border-color: #d97706; }
+.edu-btn-play { width: 42px; background: #d97706; border-color: #d97706; color: #fff; }
+.edu-btn-play:hover { background: #b45309; }
+.edu-bar { position: relative; flex: 1 1 auto; min-width: 80px; height: 22px; cursor: pointer; touch-action: none; }
+.edu-bar::before { content: ""; position: absolute; left: 0; right: 0; top: 8px; height: 6px; border-radius: 3px; background: #24354f; }
+.edu-bar-fill { position: absolute; left: 0; top: 8px; height: 6px; border-radius: 3px; background: #fbbf24; width: 0; }
+.edu-bar-marks span { position: absolute; top: 5px; width: 3px; height: 12px; margin-left: -1px; border-radius: 2px; background: #6d83a8; }
+.edu-time { color: #9fb2d3; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.edu-speed { width: auto; flex: 0 0 auto; background: #15233b; color: #dbe7ff; border: 1px solid #27395a; border-radius: 8px; height: 34px; padding: 0 6px; font-family: inherit; }
+
+.edu-info { display: flex; flex-direction: column; gap: 12px; }
+.edu-card { background: #fff; border: 1px solid var(--color-gray-200); border-radius: 10px; padding: 14px 16px; box-shadow: var(--shadow-sm); }
+.edu-card h2 { font-size: 17px; color: var(--color-gray-900); margin-bottom: 2px; }
+.edu-card .edu-en { color: var(--color-gray-500); font-size: 12px; margin-bottom: 8px; }
+.edu-card h3 { font-size: 13px; color: #92400e; margin-bottom: 8px; letter-spacing: .02em; }
+.edu-card p { font-size: 13px; line-height: 1.6; color: var(--color-gray-700); }
+.edu-meta { display: grid; grid-template-columns: 76px 1fr; gap: 4px 8px; font-size: 12.5px; margin: 8px 0; }
+.edu-meta dt { color: var(--color-gray-500); }
+.edu-meta dd { color: var(--color-gray-800); font-weight: 600; }
+.edu-steps { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.edu-steps li { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 6px; font-size: 13px; cursor: pointer; color: var(--color-gray-700); }
+.edu-steps li:hover { background: var(--color-gray-50); }
+.edu-steps li .n { width: 20px; height: 20px; border-radius: 50%; background: var(--color-gray-200); color: #78350f; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.edu-steps li.active { background: #fef3c7; color: #78350f; font-weight: 700; }
+.edu-steps li.active .n { background: #d97706; color: #fff; }
+.edu-terms { display: flex; flex-direction: column; gap: 8px; }
+.edu-terms div { font-size: 12.5px; line-height: 1.55; color: var(--color-gray-700); }
+.edu-terms b { color: var(--color-gray-900); }
+.edu-terms i { color: #b45309; font-style: normal; font-size: 11.5px; margin-left: 4px; }
+.edu-facts { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.edu-facts td { padding: 5px 4px; border-bottom: 1px solid var(--color-gray-100); vertical-align: top; }
+.edu-facts td:first-child { color: var(--color-gray-500); width: 42%; }
+.edu-facts td:last-child { font-weight: 600; color: var(--color-gray-800); }
+.edu-tips { padding-left: 16px; font-size: 12.5px; line-height: 1.6; color: var(--color-gray-700); }
+.edu-note { font-size: 11.5px; color: var(--color-gray-500); line-height: 1.5; }
